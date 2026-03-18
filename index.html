@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>林于右｜數位名片</title>
+
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --card: rgba(255,255,255,0.85);
+      --text: #191919;
+      --subtext: #6b6b6b;
+      --border: #e7e5e4;
+      --button: #ffffff;
+      --button-hover: #f1f1ef;
+    }
+
+    body.dark {
+      --bg: #000000;
+      --card: rgba(28, 28, 28, 0.9);
+      --text: #f5f5f5;
+      --subtext: #bcbcbc;
+      --border: #2b2b2b;
+      --button: #1d1d1d;
+      --button-hover: #2a2a2a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Noto Sans TC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.6s ease, color 0.3s ease;
+      cursor: pointer;
+      padding: 24px;
+    }
+
+    body.image-bg {
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    .card {
+      background: var(--card);
+      padding: 40px 28px;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      text-align: center;
+      width: 320px;
+      backdrop-filter: blur(10px);
+      cursor: default;
+      transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+
+    .avatar {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .avatar:hover img {
+      transform: scale(1.05);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      margin: 10px 0 25px;
+      color: var(--subtext);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .link-btn {
+      padding: 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--button);
+      text-decoration: none;
+      color: var(--text);
+      transition: background 0.2s ease, transform 0.2s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+
+    .link-btn:hover {
+      background: var(--button-hover);
+      transform: translateY(-2px);
+    }
+
+    .hint {
+      margin-top: 15px;
+      font-size: 12px;
+      color: var(--subtext);
+      line-height: 1.6;
+    }
+  </style>
+</head>
+
+<body id="page">
+  <div class="card">
+    <div class="avatar">
+      <img src="000.png" alt="頭像">
+    </div>
+
+    <h1>林于右</h1>
+    <div class="subtitle">我是熱愛旮旯給母的大學生</div>
+
+    <div class="links">
+      <a class="link-btn" href="https://www.instagram.com/nemuri_ni_hitaritai/" target="_blank" rel="noopener noreferrer">Instagram</a>
+      <a class="link-btn" href="https://x.com/NeLa481_0525" target="_blank" rel="noopener noreferrer">X</a>
+      <a class="link-btn" href="https://github.com/RamenCat481" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+
+    <div class="hint">點擊背景可依序切換黑底、背景圖與音效，再回到預設畫面</div>
+  </div>
+
+  <script>
+    const page = document.getElementById("page");
+    const card = document.querySelector(".card");
+
+    const audio = new Audio("002_001.ogg");
+    audio.loop = true;
+    audio.volume = 0.8;
+
+    let mode = 0;
+    let fadeInterval = null;
+
+    function clearFade() {
+      if (fadeInterval) {
+        clearInterval(fadeInterval);
+        fadeInterval = null;
+      }
+    }
+
+    function stopAudioImmediately() {
+      clearFade();
+      audio.pause();
+      audio.currentTime = 0;
+      audio.volume = 0.8;
+    }
+
+    function playAudio() {
+      clearFade();
+      audio.volume = 0.8;
+      audio.play().catch((err) => {
+        console.log("音樂播放失敗：", err);
+      });
+    }
+
+    function fadeOutAudio() {
+      clearFade();
+
+      fadeInterval = setInterval(() => {
+        if (audio.volume > 0.05) {
+          audio.volume -= 0.05;
+        } else {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.volume = 0.8;
+          clearFade();
+        }
+      }, 120);
+    }
+
+    function resetBackground() {
+      document.body.classList.remove("dark", "image-bg");
+      document.body.style.backgroundImage = "none";
+    }
+
+    function applyMode() {
+      resetBackground();
+
+      if (mode === 1) {
+        document.body.classList.add("dark");
+        stopAudioImmediately();
+      } else if (mode === 2) {
+        document.body.classList.add("image-bg");
+        document.body.style.backgroundImage = 'url("001.png")';
+        playAudio();
+      } else if (mode === 3) {
+        document.body.classList.add("image-bg");
+        document.body.style.backgroundImage = 'url("002.png")';
+        playAudio();
+      } else {
+        fadeOutAudio();
+      }
+    }
+
+    page.addEventListener("click", () => {
+      mode = (mode + 1) % 4;
+      applyMode();
+    });
+
+    card.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+  </script>
+</body>
+</html>

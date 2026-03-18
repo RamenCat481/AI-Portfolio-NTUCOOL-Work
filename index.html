@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>林于右｜數位名片</title>
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --card: rgba(255, 255, 255, 0.88);
+      --text: #191919;
+      --subtext: #6b6b6b;
+      --border: #e7e5e4;
+      --button: #ffffff;
+      --button-hover: #f1f1ef;
+      --shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+    }
+
+    body.dark {
+      --bg: #000000;
+      --card: rgba(28, 28, 28, 0.9);
+      --text: #f5f5f5;
+      --subtext: #b0b0b0;
+      --border: #2b2b2b;
+      --button: #1d1d1d;
+      --button-hover: #2a2a2a;
+      --shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-family: Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.6s ease, color 0.3s ease;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    body.image-bg {
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 40px 28px 32px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+      cursor: default;
+      position: relative;
+      z-index: 2;
+    }
+
+    .avatar {
+      width: 132px;
+      height: 132px;
+      margin: 0 auto 22px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      position: relative;
+      background: #fff;
+    }
+
+    .avatar:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .avatar:active {
+      transform: scale(0.96);
+    }
+
+    .avatar.active {
+      transform: scale(1.08);
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.16);
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 32px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      margin: 10px 0 28px;
+      font-size: 16px;
+      color: var(--subtext);
+      line-height: 1.7;
+    }
+
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .link-btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--button);
+      color: var(--text);
+      text-decoration: none;
+      transition: background 0.2s ease, transform 0.2s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+
+    .link-btn:hover {
+      background: var(--button-hover);
+      transform: translateY(-2px);
+    }
+
+    .hint {
+      margin-top: 18px;
+      font-size: 12px;
+      color: var(--subtext);
+      line-height: 1.6;
+    }
+
+    .surprise-image {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: min(68vw, 680px);
+      max-width: 680px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(10vw, -50%) scale(1);
+      z-index: 30;
+      will-change: transform, opacity;
+    }
+
+    .surprise-image.show {
+      animation: surpriseSlide 4.1s ease-in-out forwards;
+    }
+
+    .hiro-stack {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: min(68vw, 680px);
+      max-width: 680px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      will-change: transform, opacity;
+    }
+
+    .hiro-stack.show {
+      animation: hiroStackFlow 4.1s ease-in-out forwards;
+    }
+
+    .hiro-layer,
+    .hiro-fragment {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: auto;
+      opacity: 0;
+      object-fit: contain;
+      transform-origin: center center;
+      display: block;
+    }
+
+    .hiro-layer {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    #hiroBase1,
+    #hiroBase3 {
+      transform: translate(-50%, -50%) scale(2);
+    }
+
+    .hiro-fragment {
+      transform: translate(-50%, -50%) scale(1) rotate(0deg);
+      z-index: 40;
+    }
+
+    .hiro-layer.show,
+    .hiro-fragment.show {
+      opacity: 1;
+    }
+
+    .hiro-fragment.animate-final {
+      animation: fragmentFinal 1.5s ease forwards;
+    }
+
+    #hiroBase3.exit-right {
+      animation: hiroBase3Exit 0.9s ease-in forwards;
+    }
+
+    @keyframes surpriseSlide {
+      0% {
+        opacity: 0;
+        transform: translate(10vw, -50%) scale(1);
+      }
+      10% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      68% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-110%, -50%) scale(1);
+      }
+    }
+
+    @keyframes hiroStackFlow {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%);
+      }
+      8% {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+      72% {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(8vw, -50%);
+      }
+    }
+
+    @keyframes fragmentFinal {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(2) rotate(-30deg);
+      }
+    }
+
+    @keyframes hiroBase3Exit {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(2);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(20vw, -50%) scale(2);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .card {
+        padding: 32px 22px 26px;
+      }
+
+      .avatar {
+        width: 112px;
+        height: 112px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      .surprise-image,
+      .hiro-stack {
+        width: min(82vw, 680px);
+      }
+
+      @keyframes surpriseSlide {
+        0% {
+          opacity: 0;
+          transform: translate(18vw, -50%) scale(1);
+        }
+        10% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+        68% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-120%, -50%) scale(1);
+        }
+      }
+
+      @keyframes hiroStackFlow {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, -50%);
+        }
+        8% {
+          opacity: 1;
+          transform: translate(-50%, -50%);
+        }
+        72% {
+          opacity: 1;
+          transform: translate(-50%, -50%);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(14vw, -50%);
+        }
+      }
+    }
+  </style>
+</head>
+<body id="page">
+  <main class="card">
+    <div class="avatar" id="avatar">
+      <img src="000.png" alt="頭像">
+    </div>
+
+    <h1>林于右</h1>
+    <p class="subtitle">我是熱愛旮旯給母的大學生</p>
+
+    <div class="links">
+      <a class="link-btn" href="https://www.instagram.com/nemuri_ni_hitaritai/" target="_blank" rel="noopener noreferrer">Instagram</a>
+      <a class="link-btn" href="https://x.com/NeLa481_0525" target="_blank" rel="noopener noreferrer">X</a>
+      <a class="link-btn" href="https://github.com/RamenCat481" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+
+    <p class="hint">點擊背景切換場景，點頭像則會觸發額外互動</p>
+  </main>
+
+  <img
+    src="003.png"
+    alt="互動圖片"
+    class="surprise-image"
+    id="surpriseImage"
+  >
+
+  <div class="hiro-stack" id="hiroStack" aria-hidden="true">
+    <img src="Hiro_CutIn_StainedGlass_001.png" class="hiro-layer" id="hiroBase1" alt="">
+    <img src="Hiro_CutIn_StainedGlass_003.png" class="hiro-layer" id="hiroBase3" alt="">
+    <img src="Hiro_GlassFragment_001.png" class="hiro-fragment" id="hiroFragment1" alt="">
+    <img src="Hiro_GlassFragment_002.png" class="hiro-fragment" id="hiroFragment2" alt="">
+    <img src="Hiro_GlassFragment_003.png" class="hiro-fragment" id="hiroFragment3" alt="">
+  </div>
+
+  <script>
+    const RAW_BASE = "";
+
+    const page = document.getElementById("page");
+    const card = document.querySelector(".card");
+    const avatar = document.getElementById("avatar");
+    const surpriseImage = document.getElementById("surpriseImage");
+    const hiroStack = document.getElementById("hiroStack");
+    const hiroBase1 = document.getElementById("hiroBase1");
+    const hiroBase3 = document.getElementById("hiroBase3");
+    const hiroFragment1 = document.getElementById("hiroFragment1");
+    const hiroFragment2 = document.getElementById("hiroFragment2");
+    const hiroFragment3 = document.getElementById("hiroFragment3");
+
+    const bgm = new Audio(RAW_BASE + "002_001.ogg");
+    bgm.loop = true;
+    bgm.volume = 0.8;
+    bgm.preload = "auto";
+
+    const avatarSfx1 = new Audio(RAW_BASE + "001_001.ogg");
+    avatarSfx1.preload = "auto";
+
+    const avatarSfx2 = new Audio(RAW_BASE + "001_002.ogg");
+    avatarSfx2.preload = "auto";
+
+    let mode = 0;
+    let fadeInterval = null;
+    let avatarSfx2Timeout = null;
+    let avatarResetTimeout = null;
+    let hiroTimers = [];
+
+    function clearFade() {
+      if (fadeInterval) {
+        clearInterval(fadeInterval);
+        fadeInterval = null;
+      }
+    }
+
+    function clearHiroTimers() {
+      hiroTimers.forEach(timer => clearTimeout(timer));
+      hiroTimers = [];
+    }
+
+    function hideHiroLayers() {
+      [hiroBase1, hiroBase3, hiroFragment1, hiroFragment2, hiroFragment3].forEach(el => {
+        if (el) {
+          el.classList.remove("show", "animate-final", "exit-right");
+        }
+      });
+      if (hiroStack) {
+        hiroStack.classList.remove("show");
+      }
+    }
+
+    function playBgm() {
+      clearFade();
+      bgm.volume = 0.8;
+      bgm.play().catch(() => {});
+    }
+
+    function stopBgmNow() {
+      clearFade();
+      bgm.pause();
+      bgm.currentTime = 0;
+      bgm.volume = 0.8;
+    }
+
+    function fadeOutBgm() {
+      clearFade();
+      fadeInterval = setInterval(() => {
+        if (bgm.volume > 0.05) {
+          bgm.volume -= 0.05;
+        } else {
+          bgm.pause();
+          bgm.currentTime = 0;
+          bgm.volume = 0.8;
+          clearFade();
+        }
+      }, 120);
+    }
+
+    function resetBackground() {
+      document.body.classList.remove("dark", "image-bg");
+      document.body.style.backgroundImage = "none";
+    }
+
+    function applyMode() {
+      resetBackground();
+
+      if (mode === 1) {
+        document.body.classList.add("dark");
+        stopBgmNow();
+      } else if (mode === 2) {
+        document.body.classList.add("image-bg");
+        document.body.style.backgroundImage = `url("${RAW_BASE}001.png")`;
+        playBgm();
+      } else if (mode === 3) {
+        document.body.classList.add("image-bg");
+        document.body.style.backgroundImage = `url("${RAW_BASE}002.png")`;
+        playBgm();
+      } else {
+        fadeOutBgm();
+      }
+    }
+
+    function triggerAvatarEffect() {
+      clearHiroTimers();
+      hideHiroLayers();
+
+      if (avatarSfx2Timeout) {
+        clearTimeout(avatarSfx2Timeout);
+        avatarSfx2Timeout = null;
+      }
+
+      if (avatarResetTimeout) {
+        clearTimeout(avatarResetTimeout);
+        avatarResetTimeout = null;
+      }
+
+      avatar.classList.remove("active");
+      void avatar.offsetWidth;
+      avatar.classList.add("active");
+
+      surpriseImage.classList.remove("show");
+      void surpriseImage.offsetWidth;
+      surpriseImage.classList.add("show");
+
+      if (hiroStack) {
+        hiroStack.classList.remove("show");
+        void hiroStack.offsetWidth;
+        hiroStack.classList.add("show");
+      }
+
+      avatarSfx1.currentTime = 0;
+      avatarSfx1.play().catch(() => {});
+
+      hiroTimers.push(setTimeout(() => {
+        hiroBase1.classList.add("show");
+      }, 100));
+
+      hiroTimers.push(setTimeout(() => {
+        hiroBase1.classList.remove("show");
+        hiroBase3.classList.add("show");
+      }, 900));
+
+      hiroTimers.push(setTimeout(() => {
+        hiroFragment1.classList.add("show");
+      }, 1200));
+
+      hiroTimers.push(setTimeout(() => {
+        hiroFragment1.classList.remove("show");
+        hiroFragment2.classList.add("show");
+      }, 1300));
+
+      hiroTimers.push(setTimeout(() => {
+        hiroFragment2.classList.remove("show");
+        hiroFragment3.classList.add("show", "animate-final");
+      }, 1400));
+
+      hiroTimers.push(setTimeout(() => {
+        hiroBase3.classList.add("exit-right");
+      }, 3200));
+
+      avatarSfx2Timeout = setTimeout(() => {
+        avatarSfx2.currentTime = 0;
+        avatarSfx2.play().catch(() => {});
+      }, 800);
+
+      avatarResetTimeout = setTimeout(() => {
+        avatar.classList.remove("active");
+      }, 260);
+    }
+
+    page.addEventListener("click", () => {
+      mode = (mode + 1) % 4;
+      applyMode();
+    });
+
+    card.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+
+    avatar.addEventListener("click", (e) => {
+      e.stopPropagation();
+      triggerAvatarEffect();
+    });
+
+    surpriseImage.addEventListener("animationend", () => {
+      surpriseImage.classList.remove("show");
+    });
+
+    hiroStack.addEventListener("animationend", () => {
+      hideHiroLayers();
+    });
+  </script>
+</body>
+</html>
